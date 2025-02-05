@@ -3,7 +3,7 @@
 > Don thou life of earth, for a great many victory ye shall have.  
 > — The Druid  
 
-#### A daily task completer for the browser fantasy RPG, Tagoria.
+### A daily task completer for the browser fantasy RPG, Tagoria.
 
 Auto-completes daily tasks including quests, plunders, & farming. Forever.
 
