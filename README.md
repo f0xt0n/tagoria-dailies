@@ -1,7 +1,7 @@
 ![0_banner](https://github.com/user-attachments/assets/ff8c098e-a8b8-414c-9717-8b60a99b7a65)
-> Thine earthmother comes unto thee, gifts abound.
-> Don thou life of earth, for a great many victory ye shall have.
-> — The Druid
+> Thine earthmother comes unto thee, gifts abound.  
+> Don thou life of earth, for a great many victory ye shall have.  
+> — The Druid  
 
 #### A daily task completer for the browser fantasy RPG, Tagoria.
 
