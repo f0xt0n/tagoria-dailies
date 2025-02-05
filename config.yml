@@ -1,0 +1,13 @@
+# Tagoria Dailies Completer - Config
+
+# Maintain the formatting given in this file
+
+# Credentials
+USERNAME: "username01"
+PASSWORD: "password01"
+
+# Preferences
+# Default location to plunder - options: Valley, River, Ruins, Mine, Canyon, Volcano
+PLUNDER_LOCATION: "Canyon"
+# Maximum amount of Amber to carry before spending on skillpoints
+AMBER_MAX: 9001
