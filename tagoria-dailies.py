@@ -15,7 +15,7 @@ except:
     print ('[❌] Using Firefox without extensions.')
 
 # Config
-config = yaml.safe_load(open("config_priv.yml"))
+config = yaml.safe_load(open("config.yml"))
 USERNAME = config['USERNAME']
 PASSWORD = config['PASSWORD']
 # WIP - PLUNDER_LOCATION = config['PLUNDER_LOCATION']

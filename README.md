@@ -39,7 +39,7 @@ Code is far from ideal, and is not hardened or self-healing if an error occurs.
 
 Dependencies required for dev --
 - Firefox
-- Python 3
+- Python 3.10.12
 - Selenium 4
 - Splinter 0.21
 
