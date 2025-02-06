@@ -6,6 +6,7 @@ from time import sleep
 from splinter import Browser
 import yaml
 
+# Use Firefox extensions? Y/N (Must have "ublock_origin.xpi & "noscript.xpi")
 try:
     browser = Browser('firefox', extensions=['ublock_origin.xpi', 'noscript.xpi'], capabilities={"acceptInsecureCerts": True})
     print ('[✅] Using Firefox with extensions.')
@@ -14,10 +15,10 @@ except:
     print ('[❌] Using Firefox without extensions.')
 
 # Config
-config = yaml.safe_load(open("config.yml"))
+config = yaml.safe_load(open("config_priv.yml"))
 USERNAME = config['USERNAME']
 PASSWORD = config['PASSWORD']
-PLUNDER_LOCATION = config['PLUNDER_LOCATION']
+# WIP - PLUNDER_LOCATION = config['PLUNDER_LOCATION']
 AMBER_MAX = config['AMBER_MAX']
 
 # Initial variable setup
@@ -28,6 +29,7 @@ quest_points = 3
 stat_rotation = 1
 quest_location = '/mountains/overview/zone/?w=1IN&thiszone=5' # Default location to plunder is Canyon
 quest_complete = False
+amber = 1
 
 
 # Login
@@ -104,7 +106,8 @@ def quest():
     browser.find_by_id('menuLink11').click() # Go to Druid in Village
     sleep(3)
     browser.find_by_id('druid_mission').click()
-
+    sleep(3)
+    
     # Turn in quest
     if quest_complete:
         if browser.is_element_present_by_xpath("//*[contains(@id,'btn_complete_')]"):
@@ -120,13 +123,19 @@ def quest():
     if browser.is_element_present_by_id('btn_abandon'):
         print ('[*] Quest already in progress.')
 
+    # Get actual current Quest Points
+    if browser.find_by_css('.mission_table2'):          
+        xpathQP = '//*[@class="mission_table2"]/tbody/tr/th[text()="Quest points: "]/b'
+        actualQP = int(browser.find_by_xpath(xpathQP).first.text)
+        quest_points = actualQP        
+        print ('[*] Quest Points: ' + str(quest_points))
+
     # Accept new quest
     # NOTE: accepts new quest before checking for AP so if we have any left over QP for the day, we can accept the quest for tomorrow and allow for them to effectively 'carry-over' to new day.
     if browser.links.find_by_href('/town/druid/accept/?w=1IN'):
         browser.links.find_by_href('/town/druid/accept/?w=1IN').click()
-        quest_points -= 1
+        sleep(3)        
         quest_complete = False
-        print ('[*] Quest Points: ' + str(quest_points))
 
     # Check if we have any points
     if action_points == 0:
@@ -168,7 +177,7 @@ def quest():
 def plunder():
     global action_points
     global quest_complete
-    global amber_threshold
+    global amber
 
     browser.find_by_id('menuLink5').click() # Go to Mountains
     browser.links.find_by_href(quest_location).click() # Go to Quest Location
@@ -185,19 +194,24 @@ def plunder():
             action = 'PLUNDER_BUTTON'
             print ('[*] Plundering..')
 
-
         while not quest_complete: # Attempts quest until succeeds or runs out of Action Points                
+            # Get actual current Action Points
+            if browser.find_by_css('.buy_action_point_table'):            
+                xpathAP = '//*[@class="buy_action_point_table"]/tbody/tr/td/b'
+                actualAP = int(browser.find_by_xpath(xpathAP).first.text)
+                action_points = actualAP
+                print ('[*] Action Points: ' + str(action_points))
             if action_points == 0:
-                break
+                break            
             browser.find_by_name(action).click()
-            action_points -= 1
-            print ('[*] Current AP: ' + str(action_points))
             print ('[*] Battling..')
             wait_until(0,10,random.randint(25,46)) # Wait 10 mins 25-45 secs
             if browser.is_text_present('Winner: ' + USERNAME):                
                 print ('[*] Victory!')
+                print ('--------------------')
             else:
-                print ('[*] Defeat!')    
+                print ('[*] Defeat!')
+                print ('--------------------')
             if browser.is_text_present('Well done! You have accomplished your task.') or browser.is_text_present('You have successfully explored the region.'):                    
                 print ('[*] Quest Complete.')
                 print ('--------------------')
@@ -206,7 +220,9 @@ def plunder():
             else:
                 browser.links.find_by_href(quest_location).click()
             # Check if levelled up
-            levelup()    
+            levelup()
+            # Check if at amber threshold
+            skiller()   
     return
 
 
@@ -217,7 +233,8 @@ def levelup():
         print ('[*] Collecting levelup reward..')
         browser.find_by_id('leftNewsLink').click()
         #browser.find_by_name('ACTION_COLLECT_LEVELUP').click()
-        browser.links.find_by_href('/char/attributes/levelup/?w=1IN&1738627445&collect=1').click()
+        browser.links.find_by_href('/char/attributes/levelup/?w=1IN&1738627445&collect=1').click()  # ||Issue: Unsure if general link or unique to certain level?
+        sleep(9)
     else:
         return
     return
@@ -226,11 +243,16 @@ def levelup():
 # Increase attributes in sequence
 def skiller():
     global stat_rotation
-
+    global amber
+   
     browser.find_by_id('menuLink1').click() # Go to Character Stats
 
-    #Spend skillpoints on stats in rotation until depleted
-    while not browser.is_text_present('insufficient') == True:
+    # Buy skillpoints
+    buySP()
+
+    # Spend skillpoints on stats in rotation until depleted
+    print ('[*] Increasing attributes..')
+    while not browser.is_text_present('insufficient'):
         if stat_rotation == 1:
             browser.find_by_id('incr_str').click() # Increase Strength
             sleep(3)
@@ -248,11 +270,25 @@ def skiller():
             sleep(3)
             stat_rotation = 1
         else:
-            stat_rotation = 1
+            break
+    return
 
-    #Buy skillpoint until no amber or have 8 skillpoints
-    while not browser.is_text_present('insufficient') == True:
-        browser.find_by_id('buy_SP').click() # Purchase Skillpoints
+
+def buySP():   
+    # Get current Amber
+    if browser.find_by_id('spMoney'):
+        amber = int(browser.find_by_id('spMoney').first.text)
+    # Buy skillpoints until under Amber threshold
+    print ('[*] Amber: ' + str(amber) + ' / ' + str(AMBER_MAX))
+    if amber > AMBER_MAX:
+        print ('[*] Buying skillpoints..')
+        while amber > AMBER_MAX:
+            browser.find_by_id('buy_SP').click() # Purchase Skillpoints
+            sleep(3)
+            amber = int(browser.find_by_id('spMoney').first.text)
+        print ('[*] Amber: ' + str(amber) + ' / ' + str(AMBER_MAX))
+    else:
+        print ('[*] Amber under threshold.')
     return
 
 
@@ -285,7 +321,7 @@ def error():
 
 
 # Entry
-print ('---~|| Initiate Tagoria Dailies Completer ||~---')
+print ('--~={| Initiate Tagoria Dailies Completer |}=~--')
 browser.visit('https://www.tagoria.net/?lang=en')
 while True:
     login()
