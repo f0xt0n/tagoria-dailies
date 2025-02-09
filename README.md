@@ -30,7 +30,7 @@ Auto-completes daily tasks including quests, plunders, and farming. Forever.
 
 Notes:
 - If using extensions, the action timers won't show by default. Open 'NoScript' in top right corner, trust 'tagoria.net', untrust every other URL.
-- Don't click any link in-grame while script is active as it will likely become confused on where it is and crash.
+- Don't click any link in-game while script is active as it will likely become confused on where it is and crash.
 - If you encounter an error - logout, close browser, check instructions, restart script.
 
 
