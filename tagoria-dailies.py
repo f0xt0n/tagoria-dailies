@@ -7,17 +7,29 @@ from splinter import Browser
 import yaml
 
 # Use Firefox extensions? Y/N (Must have "ublock_origin.xpi & "noscript.xpi")
-try:
-    browser = Browser('firefox', extensions=['ublock_origin.xpi', 'noscript.xpi'], capabilities={"acceptInsecureCerts": True})
+while True:
+    useExtension = input("Using Firefox Extensions? (Y/N): ")
+    if useExtension not in ('Y','y','N','n'):
+        print("Invalid input.")
+    else:
+        break
+
+if useExtension == 'Y' or useExtension == 'y':
     print ('[✅] Using Firefox with extensions.')
-except:
-    browser = Browser('firefox', capabilities={"acceptInsecureCerts": True})
+    browser = Browser('firefox', extensions=['ublock_origin.xpi', 'noscript.xpi'], capabilities={"acceptInsecureCerts": True})
+    print ('[*] Loading..')
+    sleep(3)
+else:
     print ('[❌] Using Firefox without extensions.')
+    browser = Browser('firefox', capabilities={"acceptInsecureCerts": True})
+    print ('[*] Loading..')
+    sleep(3)
 
 # Config
 config = yaml.safe_load(open("config.yml"))
 USERNAME = config['USERNAME']
 PASSWORD = config['PASSWORD']
+WORLD = config['WORLD']
 # WIP - PLUNDER_LOCATION = config['PLUNDER_LOCATION']
 AMBER_MAX = config['AMBER_MAX']
 
@@ -26,18 +38,20 @@ days = 0
 new_day = True
 action_points = 6
 quest_points = 3
+skill_points = 0
 stat_rotation = 1
-quest_location = '/mountains/overview/zone/?w=1IN&thiszone=5' # Default location to plunder is Canyon
+stat_epoch = 0
+quest_location = '/mountains/overview/zone/?w='+WORLD+'&thiszone=5' # Default location to plunder is Canyon
 quest_complete = False
 amber = 1
 
 
 # Login
 def login():
-    if browser.links.find_by_href('/auth/loginform/'):
+    if browser.links.find_by_partial_href('/auth/loginform/'):
         print ('[*] Logging in..')
         browser.find_by_id('menuLink1').first.click()
-        browser.find_by_name('world').select('1IN')
+        browser.find_by_name('world').select(WORLD)
         browser.fill('username', USERNAME)
         browser.fill('password', PASSWORD)
         browser.find_by_name('LABEL_LOGIN').click()
@@ -49,7 +63,7 @@ def login():
 
 # Collect Wages
 def wages():
-    if browser.is_element_present_by_id('leftNewsLink') and browser.is_element_present_by_xpath("//*[contains(@href,'/town/farm/?w=1IN')]"):
+    if browser.is_element_present_by_id('leftNewsLink') and browser.is_element_present_by_xpath("//*[contains(@href,'/town/farm/')]"):
         browser.find_by_id('leftNewsLink').click()
         browser.find_by_name('ACTION_COLLECT_WAGE').click()
         return print ('[*] Collected wage from farm.')       
@@ -109,15 +123,14 @@ def quest():
     sleep(3)
     
     # Turn in quest
-    if quest_complete:
-        if browser.is_element_present_by_xpath("//*[contains(@id,'btn_complete_')]"):
-            browser.find_by_xpath("//*[contains(@id,'btn_complete_')]").click()
-            print ('[*] Turned in Quest.')
-            sleep(3)
-            browser.find_by_id('druid_mission').click()
-            quest_complete = False
-        else:
-            print ('[*] No quest to turn in.')
+    if browser.is_element_present_by_xpath("//*[contains(@id,'btn_complete_')]"):
+        browser.find_by_xpath("//*[contains(@id,'btn_complete_')]").click()
+        print ('[*] Turned in Quest.')
+        sleep(3)
+        browser.find_by_id('druid_mission').click()
+        quest_complete = False
+    else:
+        print ('[*] No quest to turn in.')
 
     # Check if already have quest
     if browser.is_element_present_by_id('btn_abandon'):
@@ -131,43 +144,45 @@ def quest():
         print ('[*] Quest Points: ' + str(quest_points))
 
     # Accept new quest
-    # NOTE: accepts new quest before checking for AP so if we have any left over QP for the day, we can accept the quest for tomorrow and allow for them to effectively 'carry-over' to new day.
-    if browser.links.find_by_href('/town/druid/accept/?w=1IN'):
-        browser.links.find_by_href('/town/druid/accept/?w=1IN').click()
+    # NOTE: accepts new quest before checking for AP so if we have any left over QP for the day,
+    # we can accept the quest for tomorrow and allow for them to effectively 'carry-over' to new day.
+    if browser.links.find_by_partial_href('/town/druid/accept/'):
+        print ('[*] Accepted new quest.')
+        browser.links.find_by_partial_href('/town/druid/accept/').click()
         sleep(3)        
         quest_complete = False
 
     # Check if we have any points
     if action_points == 0:
         new_day = False
-        return print ('[*] No Action Points left, going to farm..')
+        return print ('[*] No Action Points left.')
     elif quest_points == 0:
-        print ('[*] No Quest Points left, going to plunder..')
+        print ('[*] No Quest Points left.')
 
     # Determine quest location
     if browser.find_by_css('.mission_table'):
         location = browser.find_by_css('.mission_table').last
         if 'valley' in location.text:
             print ('[*] Quest location is: Valley')
-            quest_location = '/mountains/overview/zone/?w=1IN&thiszone=1'
+            quest_location = '/mountains/overview/zone/?w='+WORLD+'&thiszone=1'
         elif 'river' in location.text:
             print ('[*] Quest location is: River')
-            quest_location = '/mountains/overview/zone/?w=1IN&thiszone=2'
+            quest_location = '/mountains/overview/zone/?w='+WORLD+'&thiszone=2'
         elif 'ruins' in location.text:
             print ('[*] Quest location is: Ruins')
-            quest_location = '/mountains/overview/zone/?w=1IN&thiszone=3'
+            quest_location = '/mountains/overview/zone/?w='+WORLD+'&thiszone=3'
         elif 'mine' in location.text:
             print ('[*] Quest location is: Mine')
-            quest_location = '/mountains/overview/zone/?w=1IN&thiszone=4'
+            quest_location = '/mountains/overview/zone/?w='+WORLD+'&thiszone=4'
         elif 'canyon' in location.text:
             print ('[*] Quest location is: Canyon')
-            quest_location = '/mountains/overview/zone/?w=1IN&thiszone=5'
+            quest_location = '/mountains/overview/zone/?w='+WORLD+'&thiszone=5'
         elif 'volcano' in location.text:
             print ('[*] Quest location is: Volcano')
-            quest_location = '/mountains/overview/zone/?w=1IN&thiszone=6'
+            quest_location = '/mountains/overview/zone/?w='+WORLD+'&thiszone=6'
         else:
             print ('[*] No quest active, going to Canyon..')
-            quest_location = '/mountains/overview/zone/?w=1IN&thiszone=5'
+            quest_location = '/mountains/overview/zone/?w='+WORLD+'&thiszone=5'
     
     plunder()
     return
@@ -177,7 +192,7 @@ def quest():
 def plunder():
     global action_points
     global quest_complete
-    global amber
+    global AMBER_MAX
 
     browser.find_by_id('menuLink5').click() # Go to Mountains
     browser.links.find_by_href(quest_location).click() # Go to Quest Location
@@ -222,18 +237,20 @@ def plunder():
             # Check if levelled up
             levelup()
             # Check if at amber threshold
-            skiller()   
+            if getAmber() > AMBER_MAX:
+                skiller()
+                browser.find_by_id('menuLink5').click() # Go to Mountains
+                browser.links.find_by_href(quest_location).click() # Go to Quest Location
     return
 
 
 # Check if levelled up
 def levelup():    
-    if browser.is_element_present_by_id('leftNewsLink') and browser.links.find_by_href('/char/attributes/levelup/?w=1IN'):
-        # browser.is_element_present_by_xpath("//*[contains(@href,'/town/levelup/?w=1IN')]")
+    if browser.is_element_present_by_id('leftNewsLink') and browser.links.find_by_partial_href('/char/attributes/levelup/'):
         print ('[*] Collecting levelup reward..')
         browser.find_by_id('leftNewsLink').click()
-        #browser.find_by_name('ACTION_COLLECT_LEVELUP').click()
-        browser.links.find_by_href('/char/attributes/levelup/?w=1IN&1738627445&collect=1').click()  # ||Issue: Unsure if general link or unique to certain level?
+        if browser.is_element_present_by_xpath("//*[contains(@href,'/char/attributes/levelup/')]"):
+            browser.links.find_by_partial_href('/char/attributes/levelup/').click()
         sleep(9)
     else:
         return
@@ -242,54 +259,105 @@ def levelup():
 
 # Increase attributes in sequence
 def skiller():
+    global skill_points
     global stat_rotation
+    global stat_epoch
     global amber
-   
-    browser.find_by_id('menuLink1').click() # Go to Character Stats
+    xpathSTR = "//*[contains(@action,'/char/attributes/skillstr/')]"
+    xpathDEX = "//*[contains(@action,'/char/attributes/skilldex/')]"
+    xpathAGI = "//*[contains(@action,'/char/attributes/skillagi/')]"
+    xpathSTA = "//*[contains(@action,'/char/attributes/skillcst/')]"
+    xpathACC = "//*[contains(@action,'/char/attributes/skillacc/')]"
+
+    if browser.find_by_id('menuLink0'):
+        browser.find_by_id('menuLink0').click() # Go to Character Stats
+    sleep(2)
 
     # Buy skillpoints
-    buySP()
+    print('[*] Bought ' + str(buySP()) + ' SP.')
+
+    # Display skillpoints available
+    print ('[*] Skill Points: ' + str(getSP()))
 
     # Spend skillpoints on stats in rotation until depleted
-    print ('[*] Increasing attributes..')
-    while not browser.is_text_present('insufficient'):
+    if skill_points != 0:
+        print ('[*] Increasing attributes..')
+    while not skill_points == 0:
+        if stat_epoch == 6:
+            if browser.is_element_present_by_xpath(xpathACC):
+                browser.find_by_xpath(xpathACC).click()  # Increase Accuracy every 6 passes of all 4 other stats.
+                stat_epoch = 0
+                getSP()
+            sleep(3)
         if stat_rotation == 1:
-            browser.find_by_id('incr_str').click() # Increase Strength
-            sleep(3)
-            stat_rotation += 1
+            if browser.is_element_present_by_xpath(xpathSTR):
+                browser.find_by_xpath(xpathSTR).click()  # Increase Strength
+                stat_rotation += 1
+                getSP()
+            sleep(3)            
         elif stat_rotation == 2:
-            browser.find_by_id('incr_dex').click() # Increase Dexterity
-            sleep(3)
-            stat_rotation += 1
+            if browser.is_element_present_by_xpath(xpathDEX):
+                browser.find_by_xpath(xpathDEX).click()  # Increase Dexterity
+                stat_rotation += 1
+                getSP()
+            sleep(3)            
         elif stat_rotation == 3:
-            browser.find_by_id('incr_agi').click() # Increase Agility
-            sleep(3)
-            stat_rotation += 1
+            if browser.is_element_present_by_xpath(xpathAGI):
+                browser.find_by_xpath(xpathAGI).click()  # Increase Agility
+                stat_rotation += 1
+                getSP()
+            sleep(3)            
         elif stat_rotation == 4:
-            browser.find_by_id('incr_sta').click() # Increase Stamina
-            sleep(3)
-            stat_rotation = 1
+            if browser.is_element_present_by_xpath(xpathSTA):
+                browser.find_by_xpath(xpathSTA).click()  # Increase Stamina
+                stat_rotation = 1
+                stat_epoch += 1
+                getSP()
+            sleep(3)            
         else:
             break
     return
 
 
-def buySP():   
-    # Get current Amber
+# Get Amber amount
+def getAmber():
+    global amber
+
     if browser.find_by_id('spMoney'):
         amber = int(browser.find_by_id('spMoney').first.text)
+    return amber
+
+
+# Get skillpoint amount
+def getSP():    
+    global skill_points
+    
+    if browser.find_by_css('.skillreset_table'):            
+        xpathSP = '//*[@class="skillreset_table"]/tbody/tr/th'
+        actualSP = int(browser.find_by_xpath(xpathSP).first.text[-1])
+        skill_points = actualSP
+    return skill_points
+
+
+# Purchase Skillpoints
+def buySP():   
+    global AMBER_MAX
+    global amber
+    boughtSP = 0
+    
     # Buy skillpoints until under Amber threshold
-    print ('[*] Amber: ' + str(amber) + ' / ' + str(AMBER_MAX))
+    print ('[*] Amber: ' + str(getAmber()) + ' / ' + str(AMBER_MAX))
     if amber > AMBER_MAX:
         print ('[*] Buying skillpoints..')
         while amber > AMBER_MAX:
-            browser.find_by_id('buy_SP').click() # Purchase Skillpoints
+            browser.find_by_name('BUY_SKILL').first.click() # Purchase Skillpoints
+            boughtSP += 1
             sleep(3)
-            amber = int(browser.find_by_id('spMoney').first.text)
-        print ('[*] Amber: ' + str(amber) + ' / ' + str(AMBER_MAX))
+            getAmber()  # Update Amber value after buy
+        print ('[*] Amber: ' + str(getAmber()) + ' / ' + str(AMBER_MAX))
     else:
         print ('[*] Amber under threshold.')
-    return
+    return boughtSP
 
 
 # Wait
@@ -311,7 +379,7 @@ def wait_until(hours,minutes,seconds):
             sleep(1)
 
 
-# Error Handling - lol
+# Error Handling - lol (WIP)
 def error():
     print ('[!!] Error [!!]')
     sleep(9)
@@ -323,6 +391,7 @@ def error():
 # Entry
 print ('--~={| Initiate Tagoria Dailies Completer |}=~--')
 browser.visit('https://www.tagoria.net/?lang=en')
+
 while True:
     login()
     wages()
