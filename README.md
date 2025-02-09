@@ -24,12 +24,13 @@ Auto-completes daily tasks including quests, plunders, and farming. Forever.
 **INSTRUCTIONS**::
 1. (Optional but Recommended to increase speed & reduce bandwidth) Download Firefox extensions 'uBlock' & 'NoScript' (right-click "Add to Firefox" -> "Save Link As"). Rename files to 'ublock_origin.xpi' & 'noscript.xpi' and put them in the same folder as 'TagoriaDailies.exe'.
 2. Enter credentials & edit preferences in 'config.yml'.
-3. Confirm character is not currently taking an action, and has turned-in any quest. Logout.
+3. Confirm character is not currently taking an action. Logout.
 4. Start 'TagoriaDailies_linux'.
 5. Sit back & relax (or leave it running on a raspberry pi and forget about it for months 😅)
 
 Notes:
 - If using extensions, the action timers won't show by default. Open 'NoScript' in top right corner, trust 'tagoria.net', untrust every other URL.
+- Don't click any link in-grame while script is active as it will likely become confused on where it is and crash.
 - If you encounter an error - logout, close browser, check instructions, restart script.
 
 
