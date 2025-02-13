@@ -4,26 +4,42 @@ import random
 from datetime import datetime, timedelta
 from time import sleep
 from splinter import Browser
+from selenium.webdriver.firefox.service import Service
 import yaml
 
-# Use Firefox extensions? Y/N (Must have "ublock_origin.xpi & "noscript.xpi")
+# Firefox installed with Snap?: 
 while True:
-    useExtension = input("Using Firefox Extensions? (Y/N): ")
-    if useExtension not in ('Y','y','N','n'):
+    useSnap = input("Is Firefox installed with Snap? (OS: Ubuntu..Kubuntu..) [Y/N]: ")
+    if useSnap not in ('Y','y','N','n'):
         print("Invalid input.")
     else:
+        useSnap = useSnap.upper()
         break
 
-if useExtension == 'Y' or useExtension == 'y':
+# Use Firefox extensions? (Must have "ublock_origin.xpi & "noscript.xpi")
+while True:
+    useExtensions = input("Using Firefox Extensions? [Y/N]: ")
+    if useExtensions not in ('Y','y','N','n'):
+        print("Invalid input.")
+    else:
+        useExtensions = useExtensions.upper()
+        break
+
+# Set browser properties
+if useSnap == 'Y' and useExtensions == 'Y':
+    browser = Browser('firefox', service=Service(executable_path='/snap/bin/geckodriver'), extensions=['ublock_origin.xpi', 'noscript.xpi'], capabilities={'acceptInsecureCerts':True})
+    print ('[✅] Using Firefox installed with Snap.')
     print ('[✅] Using Firefox with extensions.')
-    browser = Browser('firefox', extensions=['ublock_origin.xpi', 'noscript.xpi'], capabilities={"acceptInsecureCerts": True})
-    print ('[*] Loading..')
-    sleep(3)
+elif useSnap == 'Y' and useExtensions == 'N':
+    browser = Browser('firefox', service=Service(executable_path='/snap/bin/geckodriver'), capabilities={'acceptInsecureCerts':True})
+    print ('[✅] Using Firefox installed with Snap.')
+elif useSnap == 'N' and useExtensions == 'Y':
+    browser = Browser('firefox', extensions=['ublock_origin.xpi', 'noscript.xpi'], capabilities={'acceptInsecureCerts':True})
+    print ('[✅] Using Firefox with extensions.')
 else:
-    print ('[❌] Using Firefox without extensions.')
-    browser = Browser('firefox', capabilities={"acceptInsecureCerts": True})
-    print ('[*] Loading..')
-    sleep(3)
+    browser = Browser('firefox', capabilities={'acceptInsecureCerts':True})
+print ('[*] Loading..')
+sleep(3)
 
 # Config
 config = yaml.safe_load(open("config.yml"))
@@ -98,7 +114,7 @@ def farm():
         times_worked += 1
         print ('[*] Times worked: ' + str(times_worked))
     days +=1
-    print ('[🌄] The sun rises once again. For ' + days + ' days, the legend continues..!')
+    print ('[🌄] The sun rises once again. For ' + str(days) + ' days, the legend continues..!')
     new_day = True
     action_points = 6
     quest_points = 3
@@ -360,7 +376,7 @@ def buySP():
     return boughtSP
 
 
-# Wait
+# Wait for a time
 def wait_until(hours,minutes,seconds):
     future = datetime.replace(datetime.now() + timedelta(hours=hours,minutes=minutes,seconds=seconds))
     print ('[*] Completion : ' + str(future))
@@ -379,17 +395,8 @@ def wait_until(hours,minutes,seconds):
             sleep(1)
 
 
-# Error Handling - lol (WIP)
-def error():
-    print ('[!!] Error [!!]')
-    sleep(9)
-    browser.find_by_id('menuLink10').click() # Logout
-    return
-
-
-
 # Entry
-print ('--~={| Initiate Tagoria Dailies Completer |}=~--')
+print ('--~={| Tagoria Dailies Completer |}=~--')
 browser.visit('https://www.tagoria.net/?lang=en')
 
 while True:
