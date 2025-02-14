@@ -284,6 +284,11 @@ def skiller():
     xpathAGI = "//*[contains(@action,'/char/attributes/skillagi/')]"
     xpathSTA = "//*[contains(@action,'/char/attributes/skillcst/')]"
     xpathACC = "//*[contains(@action,'/char/attributes/skillacc/')]"
+    xpvSTR = '//*[@id="SKILLS"]/following::table/tbody/tr[2]/td/table/tbody/tr/td[1]/table/tbody/tr/td[2]'
+    xpvDEX = '//*[@id="SKILLS"]/following::table/tbody/tr[3]/td/table/tbody/tr/td[1]/table/tbody/tr/td[2]'
+    xpvAGI = '//*[@id="SKILLS"]/following::table/tbody/tr[4]/td/table/tbody/tr/td[1]/table/tbody/tr/td[2]'
+    xpvSTA = '//*[@id="SKILLS"]/following::table/tbody/tr[5]/td/table/tbody/tr/td[1]/table/tbody/tr/td[2]'
+    xpvACC = '//*[@id="SKILLS"]/following::table/tbody/tr[6]/td/table/tbody/tr/td[1]/table/tbody/tr/td[2]'
 
     if browser.find_by_id('menuLink0'):
         browser.find_by_id('menuLink0').click() # Go to Character Stats
@@ -302,30 +307,35 @@ def skiller():
         if stat_epoch == 6:
             if browser.is_element_present_by_xpath(xpathACC):
                 browser.find_by_xpath(xpathACC).click()  # Increase Accuracy every 6 passes of all 4 other stats.
+                print ('[*] ACC : ' + str(browser.find_by_xpath(xpvACC).first.text))
                 stat_epoch = 0
                 getSP()
             sleep(3)
         if stat_rotation == 1:
             if browser.is_element_present_by_xpath(xpathSTR):
                 browser.find_by_xpath(xpathSTR).click()  # Increase Strength
+                print ('[*] STR : ' + str(browser.find_by_xpath(xpvSTR).first.text))
                 stat_rotation += 1
                 getSP()
             sleep(3)            
         elif stat_rotation == 2:
             if browser.is_element_present_by_xpath(xpathDEX):
                 browser.find_by_xpath(xpathDEX).click()  # Increase Dexterity
+                print ('[*] DEX : ' + str(browser.find_by_xpath(xpvDEX).first.text))
                 stat_rotation += 1
                 getSP()
             sleep(3)            
         elif stat_rotation == 3:
             if browser.is_element_present_by_xpath(xpathAGI):
                 browser.find_by_xpath(xpathAGI).click()  # Increase Agility
+                print ('[*] AGI : ' + str(browser.find_by_xpath(xpvAGI).first.text))
                 stat_rotation += 1
                 getSP()
             sleep(3)            
         elif stat_rotation == 4:
             if browser.is_element_present_by_xpath(xpathSTA):
                 browser.find_by_xpath(xpathSTA).click()  # Increase Stamina
+                print ('[*] STA : ' + str(browser.find_by_xpath(xpvSTA).first.text))
                 stat_rotation = 1
                 stat_epoch += 1
                 getSP()
@@ -405,9 +415,3 @@ while True:
     while new_day:
         quest()
     farm()
-
-
-# Forseen Issues::
-# - Eventually the midnight points reset might intersect with when script is active doing quests/plundering. 
-# - This will desync points value stored in code and actual points, resulting in script not using up all points for the day.
-# - 1 day skip inefficiency :'(
