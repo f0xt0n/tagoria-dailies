@@ -79,7 +79,7 @@ def login():
 
 # Collect Wages
 def wages():
-    if browser.is_element_present_by_id('leftNewsLink') and browser.is_element_present_by_xpath("//*[contains(@href,'/town/farm/')]"):
+    if browser.is_element_present_by_xpath("//*[@id='leftNewsLink'][contains(@href,'/town/farm/')]"):
         browser.find_by_id('leftNewsLink').click()
         browser.find_by_name('ACTION_COLLECT_WAGE').click()
         return print ('[*] Collected wage from farm.')       
@@ -262,12 +262,17 @@ def plunder():
 
 # Check if levelled up
 def levelup():    
-    if browser.is_element_present_by_id('leftNewsLink') and browser.links.find_by_partial_href('/char/attributes/levelup/'):
+    xpvLevel = '//*[@class="content_inner_last_row"]'
+    xpvReward = '//*[@class="content_inner_last_row"]/b/table/tbody/tr/td[1]'
+    if browser.is_element_present_by_xpath("//*[@id='leftNewsLink'][contains(@href,'/char/attributes/levelup/')]"):
         print ('[*] Collecting levelup reward..')
         browser.find_by_id('leftNewsLink').click()
-        if browser.is_element_present_by_xpath("//*[contains(@href,'/char/attributes/levelup/')]"):
-            browser.links.find_by_partial_href('/char/attributes/levelup/').click()
-        sleep(9)
+        print ('[*] Reached level : ' + str(browser.find_by_xpath(xpvLevel).first.text[45:47]))
+        print ('[*] Reward : ' + str(browser.find_by_xpath(xpvReward).first.text) + '🔸')
+        browser.links.find_by_partial_href('/char/attributes/levelup/').last.click()
+        sleep(6)
+        browser.find_by_id('menuLink5').click() # Go to Mountains
+        browser.links.find_by_href(quest_location).click() # Go to Quest Location
     else:
         return
     return
